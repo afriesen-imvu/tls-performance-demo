@@ -26,22 +26,12 @@ import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import Criterion
 import Criterion.Main
 
-time action = do
-    startTime <- getCurrentTime
-    result <- action
-    endTime <- getCurrentTime
-
-    putStrLn $ "Time " ++ show (endTime `diffUTCTime` startTime)
-
-    return result
-
 main :: IO ()
 main = withOpenSSL $ do
-    let url = "https://930-EMI-667.mktorest.com/rest/v1/leads.json"
+    let url = "https://localhost.imvu.com"
     let file = "main.hs"
     let authnToken = "assdf"
 
-    -- [url, file, authnToken] <- Env.getArgs
     contents <- BS.readFile file
     req' <- Http.parseUrl url
     let req = req'
@@ -55,7 +45,13 @@ main = withOpenSSL $ do
             }
 
     tlsConnPool <- Http.newManager tlsManagerSettings
-    osslConnPool <- Http.newManager (opensslManagerSettings Ssl.context)
+
+    let osslCtx = do
+            ctx <- Ssl.context
+            Ssl.contextSetCiphers ctx "RSA:3DES:EDE:CBC:SHA1"
+            return ctx
+
+    osslConnPool <- Http.newManager (opensslManagerSettings osslCtx)
 
     defaultMain
         [ bench "tls"     $ whnfIO $ Http.httpLbs req tlsConnPool
@@ -73,7 +69,6 @@ tlsManagerSettings :: ManagerSettings
 tlsManagerSettings = do
     mkManagerSettings tlsSettings Nothing
   where
-    -- tlsSettings = def
     tlsSettings = TLSSettings (defaultParamsClient "" "")
         { clientShared = def
             { sharedCAStore = globalCertificateStore
@@ -81,26 +76,6 @@ tlsManagerSettings = do
             }
         , clientSupported = def
             { supportedCiphers =
-                [ cipher_ECDHE_ECDSA_AES128GCM_SHA256
-                -- As of tls-1.3.3, cipher_ECDHE_RSA_AES128GCM_SHA256 has an intermittent failure condition:
-                -- <https://github.com/vincenthz/hs-tls/issues/124>
-                -- andy 4 Nov 2015
-                -- , cipher_ECDHE_RSA_AES128GCM_SHA256
-                , cipher_DHE_RSA_AES256_SHA256
-                , cipher_DHE_RSA_AES128_SHA256
-                , cipher_DHE_RSA_AES256_SHA1
-                , cipher_DHE_RSA_AES128_SHA1
-                , cipher_DHE_DSS_AES256_SHA1
-                , cipher_DHE_DSS_AES128_SHA1
-                , cipher_AES128_SHA256
-                , cipher_AES256_SHA256
-                , cipher_AES128_SHA1
-                , cipher_AES256_SHA1
-                , cipher_DHE_DSS_RC4_SHA1
-                , cipher_RC4_128_SHA1
-                , cipher_RC4_128_MD5
-                , cipher_RSA_3DES_EDE_CBC_SHA1
-                , cipher_DHE_RSA_AES128GCM_SHA256
-                ]
+                [ cipher_RSA_3DES_EDE_CBC_SHA1 ]
             }
         }
