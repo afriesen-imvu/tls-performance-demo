@@ -1,0 +1,36 @@
+name:                superduper-http
+version:             1.0.0.0
+author:              Imran Hameed
+maintainer:          ihameed@imvu.com
+build-type:          Simple
+cabal-version:       >=1.10
+
+
+executable superduper-http
+  main-is: main.hs
+
+  ghc-options: -threaded
+
+  build-depends:
+      base
+    , bytestring
+    , http-client
+    , time
+    , http-conduit
+    , http-types
+    , pretty-show
+    , resourcet
+
+    , HsOpenSSL
+    , http-client-openssl
+
+    , http-client-tls
+    , criterion
+    , tls
+
+    , connection
+    , data-default
+    , x509-store
+    , x509-system
+
+  default-language:    Haskell2010
