@@ -48,7 +48,7 @@ main = withOpenSSL $ do
 
     let osslCtx = do
             ctx <- Ssl.context
-            Ssl.contextSetCiphers ctx "RSA:3DES:EDE:CBC:SHA1"
+            Ssl.contextSetCiphers ctx "DES-CBC3-SHA"
             return ctx
 
     osslConnPool <- Http.newManager (opensslManagerSettings osslCtx)
